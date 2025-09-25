@@ -92,12 +92,18 @@
             // Get the response as raw text.
             const xmlText = await response.text();
             
+            // Log the raw text. This is useful for debugging to see if the content is correct.
+            console.log("Raw XML fetched:", xmlText.substring(0, 200) + '...');
+
             // Parse the XML text into an XML Document object that we can navigate.
+            // The proxy function is now configured to return a Content-Type of 'application/xml',
+            // which helps the browser's DOMParser correctly handle XML namespaces.
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
             // If the parser finds an error, throw an error to be caught by the try-catch block.
             if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                console.error("XML parsing error:", xmlDoc.getElementsByTagName('parsererror')[0]);
                 throw new Error('Failed to parse XML data.');
             }
 
