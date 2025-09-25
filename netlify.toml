@@ -1,1 +1,5 @@
-[build]functions = "netlify/functions"publish = "dist"[[redirects]]from = "/api/*"to = "/.netlify/functions/fetch-proxy"status = 200force = true[[headers]]for = "/"[headers.values]Access-Control-Allow-Origin = ""
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/fetch-proxy"
+status = 200
+force = true
