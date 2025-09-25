@@ -6,9 +6,9 @@
     // This is the base URL that points to your Netlify serverless function.
     // It is used to proxy requests to external XML files, which is necessary
     // to bypass Cross-Origin Resource Sharing (CORS) restrictions.
-    // We are using the direct function path which is the most reliable way
-    // to ensure the request is handled correctly.
-    const BASE_URL = '/.netlify/functions/fetch-proxy';
+    // The correct URL path to use is '/api', which is configured in netlify.toml
+    // to redirect to the serverless function.
+    const BASE_URL = '/api';
     // This is the path to the main game catalogue file. This file contains
     // a list of all available factions and their corresponding file paths.
     const MASTER_CATALOGUE_PATH = 'Warhammer 40,000.gst';
@@ -121,14 +121,16 @@
         CACHED_DATA.masterCatalogue = await fetchXML(MASTER_CATALOGUE_PATH);
 
         if (CACHED_DATA.masterCatalogue) {
-            // Get all 'catalogueLink' elements from the XML document.
-            const factionLinks = CACHED_DATA.masterCatalogue.querySelectorAll('catalogueLink');
+            // We've replaced `querySelectorAll` with `getElementsByTagName` to properly handle
+            // XML documents with namespaces.
+            const factionLinks = CACHED_DATA.masterCatalogue.getElementsByTagName('catalogueLink');
             
             // Clear the "Loading Factions" option.
             factionSelect.innerHTML = '<option value="" disabled selected>Select a Faction</option>';
 
             // Iterate through each faction link and add an option to the dropdown.
-            factionLinks.forEach(link => {
+            for (let i = 0; i < factionLinks.length; i++) {
+                const link = factionLinks[i];
                 const name = link.getAttribute('name');
                 const file = link.getAttribute('target');
                 if (name && file) {
@@ -137,10 +139,10 @@
                     option.textContent = name;
                     factionSelect.appendChild(option);
                 }
-            });
-            console.log('Factions loaded successfully.');
+            }
+            console.log(`Factions loaded successfully. Found ${factionLinks.length} factions.`);
         } else {
-            factionSelect.innerHTML = '<p class="text-red-400 text-sm">Error loading factions. Check console for details.</p>';
+            factionSelect.innerHTML = '<option value="" disabled selected>Error loading factions. Check console for details.</option>';
         }
     }
     
@@ -354,8 +356,15 @@
             CACHED_DATA.factionCatalogue = factionCatalogue; // Store in cache.
             availableUnitsContainer.innerHTML = '';
             // Find all 'selectionEntry' elements that represent units.
-            const units = factionCatalogue.querySelectorAll('selectionEntry[type="unit"]');
-            units.forEach(renderUnitCard);
+            const units = factionCatalogue.getElementsByTagName('selectionEntry');
+            
+            // Loop through the units and render them if they are of type "unit".
+            for (let i = 0; i < units.length; i++) {
+                const unit = units[i];
+                if (unit.getAttribute('type') === 'unit') {
+                    renderUnitCard(unit);
+                }
+            }
             console.log(`Units for ${selectedFile} loaded.`);
         } else {
             availableUnitsContainer.innerHTML = '<p class="text-red-400 text-sm">Error loading units. Check console for details.</p>';
