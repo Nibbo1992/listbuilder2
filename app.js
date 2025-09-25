@@ -6,8 +6,6 @@
     // This is the base URL that points to your Netlify serverless function.
     // It is used to proxy requests to external XML files, which is necessary
     // to bypass Cross-Origin Resource Sharing (CORS) restrictions.
-    // The correct URL path to use is '/api', which is configured in netlify.toml
-    // to redirect to the serverless function.
     const BASE_URL = '/api';
     // This is the path to the main game catalogue file. This file contains
     // a list of all available factions and their corresponding file paths.
@@ -36,9 +34,9 @@
     const crusadeBattleHonorsInput = document.getElementById('crusade-battle-honors');
     const saveCrusadeBtn = document.getElementById('save-crusade');
     const crusadeStatusElement = document.getElementById('crusade-status');
-
+    
     // --- Core Functions ---
-
+    
     /**
      * Handles tab navigation. This function hides all content and shows
      * only the content for the clicked tab. It also updates the active
@@ -117,36 +115,58 @@
 
     /**
      * Parses the main game catalogue to populate the faction dropdown menu.
+     * This function has been updated to use XPath to correctly handle XML namespaces.
      */
     async function populateFactionSelect() {
         // Set the loading state for the dropdown.
         factionSelect.innerHTML = '<option value="" disabled selected>Loading Factions...</option>';
         
-        // Fetch the master catalogue XML. We store it in our cache so we don't
-        // need to fetch it again if the user comes back to the main tab.
+        // Fetch the master catalogue XML.
         CACHED_DATA.masterCatalogue = await fetchXML(MASTER_CATALOGUE_PATH);
 
         if (CACHED_DATA.masterCatalogue) {
-            // We've replaced `querySelectorAll` with `getElementsByTagName` to properly handle
-            // XML documents with namespaces.
-            const factionLinks = CACHED_DATA.masterCatalogue.getElementsByTagName('catalogueLink');
-            
+            // This is the crucial part. We use XPath to find elements with a specific namespace.
+            // The `evaluate` method takes four key arguments:
+            // 1. The XPath expression: `//ns:catalogueLink` tells it to find all `<catalogueLink>` tags,
+            //    regardless of where they are in the document (`//`), and to use the `ns` prefix.
+            // 2. The context node: We start our search from the root of the document.
+            // 3. The namespace resolver: This is a function we define that maps the `ns` prefix
+            //    to the full namespace URI `http://www.battlescribe.net/schema/gameSystemSchema`.
+            // 4. The result type: `XPathResult.UNORDERED_NODE_ITERATOR_TYPE` tells it to return an
+            //    iterator that we can loop through to get the results.
+            const xpathResult = CACHED_DATA.masterCatalogue.evaluate(
+                '//ns:catalogueLink',
+                CACHED_DATA.masterCatalogue,
+                (prefix) => {
+                    // This function is the namespace resolver.
+                    if (prefix === 'ns') {
+                        return 'http://www.battlescribe.net/schema/gameSystemSchema';
+                    }
+                    return null;
+                },
+                XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                null
+            );
+
             // Clear the "Loading Factions" option.
             factionSelect.innerHTML = '<option value="" disabled selected>Select a Faction</option>';
 
-            // Iterate through each faction link and add an option to the dropdown.
-            for (let i = 0; i < factionLinks.length; i++) {
-                const link = factionLinks[i];
-                const name = link.getAttribute('name');
-                const file = link.getAttribute('target');
+            // Iterate through the results of the XPath expression and add them to the dropdown.
+            let node;
+            let factionCount = 0;
+            while (node = xpathResult.iterateNext()) {
+                const name = node.getAttribute('name');
+                const file = node.getAttribute('target');
                 if (name && file) {
                     const option = document.createElement('option');
                     option.value = file;
                     option.textContent = name;
                     factionSelect.appendChild(option);
+                    factionCount++;
                 }
             }
-            console.log(`Factions loaded successfully. Found ${factionLinks.length} factions.`);
+
+            console.log(`Factions loaded successfully. Found ${factionCount} factions.`);
         } else {
             factionSelect.innerHTML = '<option value="" disabled selected>Error loading factions. Check console for details.</option>';
         }
@@ -361,16 +381,31 @@
         if (factionCatalogue) {
             CACHED_DATA.factionCatalogue = factionCatalogue; // Store in cache.
             availableUnitsContainer.innerHTML = '';
-            // Find all 'selectionEntry' elements that represent units.
-            const units = factionCatalogue.getElementsByTagName('selectionEntry');
             
-            // Loop through the units and render them if they are of type "unit".
-            for (let i = 0; i < units.length; i++) {
-                const unit = units[i];
+            // We use XPath again here to find all unit entries within the namespace.
+            const xpathResult = factionCatalogue.evaluate(
+                '//ns:selectionEntry',
+                factionCatalogue,
+                (prefix) => {
+                    // This function is the namespace resolver.
+                    if (prefix === 'ns') {
+                        return 'http://www.battlescribe.net/schema/catalogueSchema';
+                    }
+                    return null;
+                },
+                XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+                null
+            );
+
+            let node;
+            while (node = xpathResult.iterateNext()) {
+                // Find all 'selectionEntry' elements that represent units.
+                const unit = node;
                 if (unit.getAttribute('type') === 'unit') {
                     renderUnitCard(unit);
                 }
             }
+
             console.log(`Units for ${selectedFile} loaded.`);
         } else {
             availableUnitsContainer.innerHTML = '<p class="text-red-400 text-sm">Error loading units. Check console for details.</p>';
