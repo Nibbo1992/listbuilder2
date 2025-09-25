@@ -3,33 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raw Data Fetcher</title>
+    <title>Warhammer 40K Army Builder</title>
+    <!-- Tailwind CSS for utility-first styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <!-- Custom CSS for layout and specific styling -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-900 text-gray-200 antialiased leading-relaxed min-h-screen p-8">
+<body class="bg-gray-900 text-gray-200 antialiased leading-relaxed min-h-screen p-4 sm:p-8">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-extrabold text-yellow-500 tracking-tight mb-2">
-                GitHub Data Fetcher
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-yellow-500 tracking-tight mb-2">
+                Warhammer 40K Army Builder
             </h1>
             <p class="text-lg text-gray-400">
-                Fetching and displaying raw data from the repository.
+                Build and manage your forces for the grim darkness of the 41st Millennium.
             </p>
         </header>
 
-        <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-            <h2 class="text-xl font-bold text-gray-300 mb-4">Raw File Content:</h2>
-            <pre id="raw-file-content" class="bg-gray-900 p-4 rounded-lg shadow-inner border border-gray-700 overflow-x-auto text-sm text-gray-400">Fetching data...</pre>
-        </div>
+        <!-- Tab-based navigation system -->
+        <nav class="flex justify-center border-b-2 border-gray-700 mb-6 sticky top-0 bg-gray-900 z-10">
+            <button id="tab-battle-forge" class="tab-btn active-tab-btn">
+                Battle Forge
+            </button>
+            <button id="tab-command-bunker" class="tab-btn">
+                Command Bunker
+            </button>
+            <button id="tab-favorites" class="tab-btn">
+                Favorites
+            </button>
+            <button id="tab-crusade-tracker" class="tab-btn">
+                Crusade Tracker
+            </button>
+        </nav>
+
+        <main id="main-content-container" class="bg-gray-800 rounded-xl p-4 sm:p-6 shadow-2xl border border-gray-700">
+
+            <!-- Battle Forge Tab -->
+            <div id="content-battle-forge" class="tab-content active-tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Unit Selection and Catalogue -->
+                    <div class="md:w-1/2">
+                        <div class="mb-4">
+                            <label for="faction-select" class="block text-gray-400 text-sm font-medium mb-2">Select a Faction:</label>
+                            <select id="faction-select" class="w-full p-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors">
+                                <option value="" disabled selected>Loading Factions...</option>
+                            </select>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-300 mb-2">Available Units</h3>
+                        <div id="available-units" class="bg-gray-700 rounded-lg p-3 h-96 overflow-y-auto border border-gray-600">
+                            <p class="text-gray-400 text-sm">Select a faction to view available units.</p>
+                        </div>
+                    </div>
+
+                    <!-- Army List and Points Total -->
+                    <div class="md:w-1/2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-300">Your Army List</h3>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-lg font-bold text-yellow-500">Points:</span>
+                                <span id="points-total" class="text-2xl font-extrabold text-yellow-400">0</span>
+                            </div>
+                        </div>
+                        <div id="army-list" class="bg-gray-700 rounded-lg p-3 h-96 overflow-y-auto border border-gray-600">
+                            <p class="text-gray-400 text-sm">Add units to your army.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Bunker Tab -->
+            <div id="content-command-bunker" class="tab-content hidden">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-300 mb-2">Unit Datasheets</h3>
+                    <div id="datasheet-container" class="bg-gray-700 rounded-lg p-3 border border-gray-600">
+                        <p class="text-gray-400 text-sm">Select a unit from your army list to view its datasheet.</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-300 mb-2">Stratagems</h3>
+                    <div id="stratagem-container" class="bg-gray-700 rounded-lg p-3 border border-gray-600">
+                        <p class="text-gray-400 text-sm">Stratagems for your chosen detachment will be displayed here.</p>
+                        <!-- Placeholder for rule validation -->
+                        <div class="mt-4 p-2 bg-gray-800 border-l-4 border-yellow-500 rounded-lg">
+                            <p class="text-sm text-gray-400">
+                                <strong>Note:</strong> Rule validation for wargear options and detachments is a complex feature and this app includes placeholder functions for these rules. The logic would be implemented here to ensure your army is legal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Favorites Tab -->
+            <div id="content-favorites" class="tab-content hidden">
+                <h3 class="text-xl font-bold text-gray-300 mb-2">Your Favorite Units</h3>
+                <div id="favorites-container" class="bg-gray-700 rounded-lg p-3 border border-gray-600">
+                    <p class="text-gray-400 text-sm">Favorite units will appear here.</p>
+                </div>
+            </div>
+
+            <!-- Crusade Tracker Tab -->
+            <div id="content-crusade-tracker" class="tab-content hidden">
+                <h3 class="text-xl font-bold text-gray-300 mb-2">Crusade Campaign Tracker</h3>
+                <div class="bg-gray-700 rounded-lg p-4 border border-gray-600 space-y-4">
+                    <div class="flex items-center gap-4">
+                        <label for="crusade-battle-honors" class="w-40 text-gray-400">Battle Honors:</label>
+                        <input type="text" id="crusade-battle-honors" class="flex-grow p-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-200">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label for="crusade-xp" class="w-40 text-gray-400">Experience Points:</label>
+                        <input type="number" id="crusade-xp" class="flex-grow p-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-200">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label for="crusade-rp" class="w-40 text-gray-400">Requisition Points:</label>
+                        <input type="number" id="crusade-rp" class="flex-grow p-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-200">
+                    </div>
+                    <button id="save-crusade" class="w-full p-2 bg-yellow-500 text-gray-900 font-bold rounded-lg hover:bg-yellow-400 transition-colors">
+                        Save Progress
+                    </button>
+                    <div id="crusade-status" class="text-center text-sm text-gray-400 mt-2"></div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
+    <!-- The main application script -->
     <script src="app.js"></script>
+
 </body>
 </html>
