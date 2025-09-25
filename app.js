@@ -6,6 +6,8 @@
     // This is the base URL that points to your Netlify serverless function.
     // It is used to proxy requests to external XML files, which is necessary
     // to bypass Cross-Origin Resource Sharing (CORS) restrictions.
+    // We are using the direct function path which is the most reliable way
+    // to ensure the request is handled correctly.
     const BASE_URL = '/.netlify/functions/fetch-proxy';
     // This is the path to the main game catalogue file. This file contains
     // a list of all available factions and their corresponding file paths.
@@ -74,11 +76,12 @@
     async function fetchXML(fileName) {
         // We use a try-catch block to handle any network or parsing errors gracefully.
         try {
-            // Construct the full URL to our proxy function, including the target file.
+            // Construct the full URL to the GitHub file. This is the URL our proxy will fetch.
             const githubFileUrl = `https://raw.githubusercontent.com/BSData/wh40k-10e/main/${encodeURIComponent(fileName)}`;
+            // Now, we build the URL for our own API endpoint, passing the GitHub URL as a query parameter.
             const url = `${BASE_URL}?url=${githubFileUrl}`;
             
-            console.log(`Fetching XML from: ${url}`);
+            console.log(`Fetching XML from proxy with target: ${url}`);
             
             const response = await fetch(url);
             if (!response.ok) {
@@ -137,7 +140,7 @@
             });
             console.log('Factions loaded successfully.');
         } else {
-            factionSelect.innerHTML = '<option value="" disabled selected>Error loading factions.</option>';
+            factionSelect.innerHTML = '<p class="text-red-400 text-sm">Error loading factions. Check console for details.</p>';
         }
     }
     
@@ -355,7 +358,7 @@
             units.forEach(renderUnitCard);
             console.log(`Units for ${selectedFile} loaded.`);
         } else {
-            availableUnitsContainer.innerHTML = '<p class="text-red-400 text-sm">Error loading units. Please try again.</p>';
+            availableUnitsContainer.innerHTML = '<p class="text-red-400 text-sm">Error loading units. Check console for details.</p>';
         }
     });
 
@@ -398,7 +401,7 @@
             if (favorites[unitId]) {
                 delete favorites[unitId];
                 favoriteBtn.classList.remove('favorited');
-                favoriteBtn.title = 'Favorite Unit';
+                favoriteBtn.title = 'Unfavorite Unit';
                 console.log(`Removed ${unitName} from favorites.`);
             } else {
                 favorites[unitId] = { id: unitId, name: unitName, points: parseInt(unitPoints, 10) };
