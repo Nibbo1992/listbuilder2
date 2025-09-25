@@ -32,8 +32,15 @@ exports.handler = async (event) => {
         const data = await response.text();
 
         // Return the data to the client with a successful status code.
+        // It's crucial to explicitly set the Content-Type header to 'application/xml'.
+        // This tells the browser's DOMParser that the incoming data is XML, which is
+        // necessary for it to be parsed correctly. Without this, the browser might
+        // default to parsing it as plain text, leading to an empty result.
         return {
             statusCode: 200,
+            headers: {
+                'Content-Type': 'application/xml',
+            },
             body: data,
         };
 
