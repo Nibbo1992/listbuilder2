@@ -1,1 +1,1 @@
-[build]functions = "netlify/functions"publish = "dist" # Assuming your final built files go into a 'dist' directory[[redirects]]from = "/api/*"to = "/.netlify/functions/fetch-proxy"status = 200force = true[[headers]]for = "/"[headers.values]Access-Control-Allow-Origin = ""
+[build]functions = "netlify/functions"publish = "dist"[[redirects]]from = "/api/*"to = "/.netlify/functions/fetch-proxy"status = 200force = true[[headers]]for = "/"[headers.values]Access-Control-Allow-Origin = ""
