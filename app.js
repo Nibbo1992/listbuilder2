@@ -174,12 +174,33 @@
     
     /**
      * Renders a single unit card in the available units container.
+     * This function has been updated to use XPath to handle the unit's namespace.
      * @param {Element} unit The XML element representing the unit.
      */
     function renderUnitCard(unit) {
+        // Define the namespace resolver for the catalogue schema.
+        const namespaceResolver = (prefix) => {
+            if (prefix === 'ns') {
+                return 'http://www.battlescribe.net/schema/catalogueSchema';
+            }
+            return null;
+        };
+
+        // Use XPath to find the 'cost' element with the name "Pts".
+        const xpathResult = CACHED_DATA.factionCatalogue.evaluate(
+            './/ns:cost[@name="Pts"]', // Look for a 'cost' node with a 'name' attribute equal to "Pts"
+            unit, // Start the search from the current 'unit' element
+            namespaceResolver,
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            null
+        );
+
+        // Get the cost node from the XPath result.
+        const costNode = xpathResult.singleNodeValue;
+        
         // Get unit name and points from the XML attributes.
         const unitName = unit.getAttribute('name');
-        const unitPoints = unit.querySelector('cost[name="Pts"]') ? unit.querySelector('cost[name="Pts"]').getAttribute('value') : 'N/A';
+        const unitPoints = costNode ? costNode.getAttribute('value') : 'N/A';
         const unitId = unit.getAttribute('id'); // We'll use this to uniquely identify the unit.
 
         // Create the HTML for the unit card. We use a template literal for easy
